@@ -40,7 +40,7 @@ int main() {
         }
     }
 
-	vector<Nodo> grafoInput = CreateGrafoWithShadowNodes(A);
+	vector<Nodo> grafoInput = CreateGrafoFlujoWithShadowNodes(A);
 
     int iFuente = fuente(grafoInput);
     int iSumidero = sumidero(grafoInput);
@@ -60,11 +60,11 @@ int main() {
             if(mayor[x1][x2] xor menor[x1][x2]){
                 if(mayor[x1][x2]){
                     int nodo2Shadow = shadowNode(grafoInput, nodo2);
-                    grafoInput[nodo1].addBinaryAdyacente(nodo2Shadow);
+                    grafoInput[nodo1].addInfiniteAdyacente(nodo2Shadow);
                 }
                 if(menor[x1][x2]){
                     int nodo1Shadow = shadowNode(grafoInput, nodo1);
-                    grafoInput[nodo2].addBinaryAdyacente(nodo1Shadow);
+                    grafoInput[nodo2].addInfiniteAdyacente(nodo1Shadow);
                 }
             }
         }

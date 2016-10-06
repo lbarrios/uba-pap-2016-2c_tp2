@@ -1,14 +1,18 @@
+#ifndef GRAFO_CLASS_PAP_2016_TP2
+#define GRAFO_CLASS_PAP_2016_TP2
+
 #include <bits/stdc++.h>
+#include <limits>
 
 using namespace std;
+
+int IntegerInfinityPlaceholder = numeric_limits<int>::max();
 
 struct Arista {
 	int nodoId;
 	int capacidad;
 	int flujo;
 };
-
-
 
 class Nodo{
 public:
@@ -17,16 +21,24 @@ public:
     vector<Arista> aristas;
     Nodo();
     Nodo(char typeChar);
+    void addAdyacente(int nodoId);
     void addBinaryAdyacente(int nodoId);
+    void addInfiniteAdyacente(int nodoId);
 };
 
 vector<Nodo> CreateGrafo(int inputSize){
+    int grafoSize = (inputSize);
+    vector<Nodo> GrafoInput(grafoSize);
+    return GrafoInput;
+}
+
+vector<Nodo> CreateGrafoFlujo(int inputSize){
     int grafoSize = (inputSize)+2;
     vector<Nodo> GrafoInput(grafoSize);
     return GrafoInput;
 }
 
-vector<Nodo> CreateGrafoWithShadowNodes(int inputSize){
+vector<Nodo> CreateGrafoFlujoWithShadowNodes(int inputSize){
     int grafoSize = (inputSize * 2)+2;
     vector<Nodo> GrafoInput(grafoSize);
     for(int i = inputSize + 1; i < grafoSize - 1; i++){
@@ -58,9 +70,25 @@ Nodo::Nodo(char typeChar){
     isShadow = false;
 };
 
+void Nodo::addAdyacente(int nodoId){
+    Arista a;
+    a.capacidad = 0;
+	a.flujo = 0;
+	a.nodoId = nodoId;
+    aristas.push_back(a);
+};
+
 void Nodo::addBinaryAdyacente(int nodoId){
     Arista a;
 	a.capacidad = 1;
+	a.flujo = 0;
+	a.nodoId = nodoId;
+    aristas.push_back(a);
+};
+
+void Nodo::addInfiniteAdyacente(int nodoId){
+    Arista a;
+	a.capacidad = IntegerInfinityPlaceholder;
 	a.flujo = 0;
 	a.nodoId = nodoId;
     aristas.push_back(a);
@@ -78,13 +106,20 @@ std::ostream &operator<<(std::ostream &os, Nodo const &a) {
     return os << " '" << a.tipo << "'" << a.aristas;
 }
 
-int MAXVALUE = 500000000;
+vector<Nodo> GrafoTranspuesto(vector<Nodo> grafo){
+    vector<Nodo> transpuesto;
+    vector<Arista> emptyArista;
+    for(int x = 0; x < grafo.size();x++){
+        transpuesto.push_back(grafo[x]);
+        transpuesto[x].aristas = emptyArista;
+    }
 
-bool menorContraInfinito(int a, int b){
-    if(a == b) return false;
-    if( b == -1) return true;
-    return a < b;
+    for(int x = 0; x < grafo.size();x++){
+        vector<Arista> aristas = grafo[x].aristas;
+        for(int y = 0; y < aristas.size();y++) transpuesto[aristas[y].nodoId].addAdyacente(x);
+    }
 
+    return transpuesto;
 }
 
 struct CaminoCrecimiento{
@@ -206,11 +241,100 @@ int EdmondKarps(vector<Nodo> grafo){
                 answer += a.flujo;
             }
         }
-
     }
-
     return answer;
 
 }
 
 
+vector<int>  KosarajuSharir(vector<Nodo> grafo){
+    vector<int> grupoFuertementeConexo;
+    vector<bool> visitado;
+    vector<bool> expanded;
+    for(int x = 0; x < grafo.size();x++){
+            visitado.push_back(false);
+            expanded.push_back(false);
+            grupoFuertementeConexo.push_back(-1);
+    }
+    vector<int> forwardPila;
+    vector<int> backwardPila;
+
+    for(int x = 0; x < grafo.size(); x++){
+        if(!visitado[x]){
+            visitado[x] = true;
+            forwardPila.push_back(x);
+
+            while(forwardPila.size() > 0){
+                int innerX = forwardPila[forwardPila.size()-1];
+                bool deadEnd = true;
+
+                if(!expanded[innerX]){
+                    for(int y=0; y < grafo[innerX].aristas.size();y++){
+                        int vecino = grafo[innerX].aristas[y].nodoId;
+                        if(!visitado[vecino]){
+                            deadEnd = false;
+                            visitado[vecino] = true;
+                            expanded[innerX] = true;
+                            forwardPila.push_back(vecino);
+                        }
+                    }
+                }
+
+                vector<int> a;
+                if(deadEnd){
+                   // cout<< "*POP*" << endl;
+                    backwardPila.push_back(innerX);
+                    forwardPila.pop_back();
+                    a = backwardPila;
+                   // cout<< "BACKWARD :";
+                   // for(int i = 0; i < a.size(); i++){cout << "|" << a[i] ;}; cout << endl;
+                }
+                    a = forwardPila;
+                   // cout<< "FORWARD :";
+                   // for(int i = 0; i < a.size(); i++){cout << "|" << a[i] ;}; cout << endl;
+
+            }
+
+        }
+
+    }
+
+    vector<Nodo> grafoTrans = GrafoTranspuesto(grafo);
+
+
+    while(backwardPila.size() > 0){
+        int currentNodo = backwardPila[backwardPila.size() - 1];
+        backwardPila.pop_back();
+
+        if(grupoFuertementeConexo[currentNodo] == -1){
+            //cout << "CNODO:" << currentNodo << endl;
+            vector<int> vecinosPila;
+            vecinosPila.push_back(currentNodo);
+            grupoFuertementeConexo[currentNodo] = currentNodo;
+            while(vecinosPila.size() > 0){
+                int currentVecino = vecinosPila[vecinosPila.size() - 1];
+              //  cout <<currentVecino << "_";
+                //grupoFuertementeConexo[currentVecino] = currentNodo;
+                vecinosPila.pop_back();
+                for(int x = 0; x < grafoTrans[currentVecino].aristas.size(); x++){
+                    int vecino = grafoTrans[currentVecino].aristas[x].nodoId;
+                  //  cout << "vecino:" << vecino<< endl;
+                    if( grupoFuertementeConexo[vecino] == -1){
+                        grupoFuertementeConexo[vecino] = currentNodo;
+                        vecinosPila.push_back(vecino);
+                    }
+                }
+              //  cout << endl;
+            }
+          //  cout << endl;
+
+        }
+
+    }
+
+
+    return grupoFuertementeConexo;
+
+}
+
+#endif

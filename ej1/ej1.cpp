@@ -8,7 +8,7 @@ int main() {
 	int N, M;
 	cin >> N >> M;
 
-	vector<Nodo> grafoInput = CreateGrafoWithShadowNodes(N);
+	vector<Nodo> grafoInput = CreateGrafoFlujoWithShadowNodes(N);
 
 
     int iFuente = fuente(grafoInput);
