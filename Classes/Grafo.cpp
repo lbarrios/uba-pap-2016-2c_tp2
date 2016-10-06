@@ -6,7 +6,12 @@
 
 using namespace std;
 
+// Si bien no lo usamos, la escritura correcta del algoritmo de Dilworh require usar infinio.
 int IntegerInfinityPlaceholder = numeric_limits<int>::max();
+
+//////////
+////////// CLASES Y ESTRUCTURAS
+//////////
 
 struct Arista {
 	int nodoId;
@@ -26,6 +31,16 @@ public:
     void addInfiniteAdyacente(int nodoId);
 };
 
+struct CaminoCrecimiento{
+    vector<int> nodos;
+    vector<int> posicionEnPadre;
+    int flujoASacar;
+};
+
+//////////
+////////// FUNCIONES CREACION DE GRAFOS
+//////////
+
 vector<Nodo> CreateGrafo(int inputSize){
     int grafoSize = (inputSize);
     vector<Nodo> GrafoInput(grafoSize);
@@ -39,6 +54,8 @@ vector<Nodo> CreateGrafoFlujo(int inputSize){
 }
 
 vector<Nodo> CreateGrafoFlujoWithShadowNodes(int inputSize){
+    // Los shadow nodes son una forma facil de generar la copia de los nodos que piden muchos algoritmos.
+    //
     int grafoSize = (inputSize * 2)+2;
     vector<Nodo> GrafoInput(grafoSize);
     for(int i = inputSize + 1; i < grafoSize - 1; i++){
@@ -46,6 +63,10 @@ vector<Nodo> CreateGrafoFlujoWithShadowNodes(int inputSize){
     }
     return GrafoInput;
 }
+
+//////////
+////////// FUNCIONES UTILIARIAS DE GRAFOS
+//////////
 
 int fuente(vector<Nodo> grafo){
     return 0;
@@ -59,6 +80,9 @@ int shadowNode(vector<Nodo> grafo, int originalNode){
     return originalNode + (grafo.size() - 2)/2;
 }
 
+//////////
+////////// FUNCIONES DE NODOS
+//////////
 
 Nodo::Nodo(){
     tipo = ' ';
@@ -94,17 +118,10 @@ void Nodo::addInfiniteAdyacente(int nodoId){
     aristas.push_back(a);
 };
 
-std::ostream &operator<<(std::ostream &os, Arista const &a) {
-    return os << "["<< a.flujo << "/" << a.capacidad << "-}" << a.nodoId << "]" ;
-}
 
-std::ostream &operator<<(std::ostream &os, vector<Arista> const &a) {
-    for(int x = 0; x < a.size(); x++){os << a[x];} return os;
-}
-
-std::ostream &operator<<(std::ostream &os, Nodo const &a) {
-    return os << " '" << a.tipo << "'" << a.aristas;
-}
+//////
+////// FUNCIONES AUXILIARES
+//////
 
 vector<Nodo> GrafoTranspuesto(vector<Nodo> grafo){
     vector<Nodo> transpuesto;
@@ -121,12 +138,6 @@ vector<Nodo> GrafoTranspuesto(vector<Nodo> grafo){
 
     return transpuesto;
 }
-
-struct CaminoCrecimiento{
-    vector<int> nodos;
-    vector<int> posicionEnPadre;
-    int flujoASacar;
-};
 
 CaminoCrecimiento buscarCaminoCrecimiento(vector<Nodo> grafo){
     int iFuente = fuente(grafo);
@@ -194,20 +205,15 @@ CaminoCrecimiento buscarCaminoCrecimiento(vector<Nodo> grafo){
     return respuesta;
 }
 
-std::ostream &operator<<(std::ostream &os, vector<Nodo> const &a) {
-    if(a[a.size()-2].isShadow){for(int x = 0; x <= a.size()/2; x++){if(x == 0) os << x << ":"<< a[x] << endl;
-    if(x == a.size()/2) os << a.size()-1 << ":"<< a[a.size()-1] << endl; if(x != 0 and x != a.size()/2) os <<
-    x << ":"<< a[x] << " ---> " << shadowNode(a,x) << ":" << a[shadowNode(a,x)] << endl;}}
-    else{for(int x = 0; x < a.size(); x++){os << x << ":"<< a[x] << endl;}}
-    return os;
-}
-
+//////////
+////////// EdmondKarps
+//////////
 
 int EdmondKarps(vector<Nodo> grafo){
     //cout << grafo << endl;
     CaminoCrecimiento curCamino = buscarCaminoCrecimiento(grafo);
-    int p = 0;
-    int limits = 4;
+    //int p = 0;
+    //int limits = 4;
     while(curCamino.nodos.size() > 0){
         /*if(p<limits){
            // cout << "CAMINOS:" << endl;
@@ -246,95 +252,28 @@ int EdmondKarps(vector<Nodo> grafo){
 
 }
 
+//////////
+////////// PRINTS (se ven bonitos n__n )
+//////////
 
-vector<int>  KosarajuSharir(vector<Nodo> grafo){
-    vector<int> grupoFuertementeConexo;
-    vector<bool> visitado;
-    vector<bool> expanded;
-    for(int x = 0; x < grafo.size();x++){
-            visitado.push_back(false);
-            expanded.push_back(false);
-            grupoFuertementeConexo.push_back(-1);
-    }
-    vector<int> forwardPila;
-    vector<int> backwardPila;
+std::ostream &operator<<(std::ostream &os, Arista const &a) {
+    return os << "["<< a.flujo << "/" << a.capacidad << "-}" << a.nodoId << "]" ;
+}
 
-    for(int x = 0; x < grafo.size(); x++){
-        if(!visitado[x]){
-            visitado[x] = true;
-            forwardPila.push_back(x);
+std::ostream &operator<<(std::ostream &os, vector<Arista> const &a) {
+    for(int x = 0; x < a.size(); x++){os << a[x];} return os;
+}
 
-            while(forwardPila.size() > 0){
-                int innerX = forwardPila[forwardPila.size()-1];
-                bool deadEnd = true;
+std::ostream &operator<<(std::ostream &os, Nodo const &a) {
+    return os << " '" << a.tipo << "'" << a.aristas;
+}
 
-                if(!expanded[innerX]){
-                    for(int y=0; y < grafo[innerX].aristas.size();y++){
-                        int vecino = grafo[innerX].aristas[y].nodoId;
-                        if(!visitado[vecino]){
-                            deadEnd = false;
-                            visitado[vecino] = true;
-                            expanded[innerX] = true;
-                            forwardPila.push_back(vecino);
-                        }
-                    }
-                }
-
-                vector<int> a;
-                if(deadEnd){
-                   // cout<< "*POP*" << endl;
-                    backwardPila.push_back(innerX);
-                    forwardPila.pop_back();
-                    a = backwardPila;
-                   // cout<< "BACKWARD :";
-                   // for(int i = 0; i < a.size(); i++){cout << "|" << a[i] ;}; cout << endl;
-                }
-                    a = forwardPila;
-                   // cout<< "FORWARD :";
-                   // for(int i = 0; i < a.size(); i++){cout << "|" << a[i] ;}; cout << endl;
-
-            }
-
-        }
-
-    }
-
-    vector<Nodo> grafoTrans = GrafoTranspuesto(grafo);
-
-
-    while(backwardPila.size() > 0){
-        int currentNodo = backwardPila[backwardPila.size() - 1];
-        backwardPila.pop_back();
-
-        if(grupoFuertementeConexo[currentNodo] == -1){
-            //cout << "CNODO:" << currentNodo << endl;
-            vector<int> vecinosPila;
-            vecinosPila.push_back(currentNodo);
-            grupoFuertementeConexo[currentNodo] = currentNodo;
-            while(vecinosPila.size() > 0){
-                int currentVecino = vecinosPila[vecinosPila.size() - 1];
-              //  cout <<currentVecino << "_";
-                //grupoFuertementeConexo[currentVecino] = currentNodo;
-                vecinosPila.pop_back();
-                for(int x = 0; x < grafoTrans[currentVecino].aristas.size(); x++){
-                    int vecino = grafoTrans[currentVecino].aristas[x].nodoId;
-                  //  cout << "vecino:" << vecino<< endl;
-                    if( grupoFuertementeConexo[vecino] == -1){
-                        grupoFuertementeConexo[vecino] = currentNodo;
-                        vecinosPila.push_back(vecino);
-                    }
-                }
-              //  cout << endl;
-            }
-          //  cout << endl;
-
-        }
-
-    }
-
-
-    return grupoFuertementeConexo;
-
+std::ostream &operator<<(std::ostream &os, vector<Nodo> const &a) {
+    if(a[a.size()-2].isShadow){for(int x = 0; x <= a.size()/2; x++){if(x == 0) os << x << ":"<< a[x] << endl;
+    if(x == a.size()/2) os << a.size()-1 << ":"<< a[a.size()-1] << endl; if(x != 0 and x != a.size()/2) os <<
+    x << ":"<< a[x] << " ---> " << shadowNode(a,x) << ":" << a[shadowNode(a,x)] << endl;}}
+    else{for(int x = 0; x < a.size(); x++){os << x << ":"<< a[x] << endl;}}
+    return os;
 }
 
 #endif

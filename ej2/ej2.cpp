@@ -47,7 +47,6 @@ int main() {
 
 	for(int i = 1; i <= A; i++) {
         int iShadow = shadowNode(grafoInput,i);
-       // grafoInput[i].addBinaryAdyacente(iShadow);
         grafoInput[iFuente].addBinaryAdyacente(i);
         grafoInput[iShadow].addBinaryAdyacente(iSumidero);
 	}
@@ -55,7 +54,6 @@ int main() {
     for(int x1=0; x1< A-1; x1++){
         int nodo1 = x1+1;
         for(int x2=x1+1; x2 < A; x2++){
-         //   cout << mayor[x1][x2] << "|";
             int nodo2 = x2+1;
             if(mayor[x1][x2] xor menor[x1][x2]){
                 if(mayor[x1][x2]){
@@ -68,29 +66,7 @@ int main() {
                 }
             }
         }
-       // cout << endl;
     }
-
-    //cout << grafoInput;
-    /*
-    for(int i = 1; i <= M; i++) {
-        int from; int to;
-        cin >> from >> to;
-        int toShadow = shadowNode(grafoInput, to);
-        int fromShadow = shadowNode(grafoInput, from);
-
-        grafoInput[fromShadow].addBinaryAdyacente(to);
-        grafoInput[toShadow].addBinaryAdyacente(from);
-
-    }
-	//cout << grafoInput << endl;
-
-	//cout << grafoInput << endl;
-
-	//cout << grafoInput << endl;
-    cout << "End" << endl;
-
-    */
 
     cout << A - EdmondKarps(grafoInput) << endl;
 	return 0;
