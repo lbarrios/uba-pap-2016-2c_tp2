@@ -1,90 +1,49 @@
 #include <bits/stdc++.h>
 
+#include "../Classes/Grafo.cpp"
+
 using namespace std;
-
-struct Arista {
-	int nodo;
-	int capacidad;
-	int flujo;
-};
-
-struct Nodo {
-	char tipo; // 'E': est; 'A': escuela; 'X': ninguna de las dos
-	vector<Arista> adyacentes;
-};
-
-int BFS(int startNode, int endNode, vector<Nodo>* grafo) {
-	queue<int> q;
-	q.push(startNode);
-
-}
 
 int main() {
 	int N, M;
 	cin >> N >> M;
 
-	vector<Nodo> grafoInput(N+2);
-	Nodo* fuente = &grafoInput[0];
-	Nodo* sumidero = &grafoInput[N+1];
+	vector<Nodo> grafoInput = CreateGrafoWithShadowNodes(N);
 
 
+    int iFuente = fuente(grafoInput);
+    int iSumidero = sumidero(grafoInput);
 
-	fuente -> tipo = 'X';
-	sumidero -> tipo = 'X';
+	for(int i = 1; i <= N; i++) {
+        int iShadow = shadowNode(grafoInput,i);
+        char type;
 
-	for(int i = 1; i < N+1; i++) {
-		cin >> grafoInput[i].tipo;
-		
+		cin >> type;
+        grafoInput[i].tipo = type;
+        grafoInput[iShadow].tipo = type;
+
+        grafoInput[i].addBinaryAdyacente(iShadow);
+
 		if(grafoInput[i].tipo == 'A'){
-			
-			Arista a;
-			a.capacidad = 1;
-			a.flujo = 0;
-			a.nodo = i;
-			fuente -> adyacentes.push_back(a);	
+            grafoInput[iFuente].addBinaryAdyacente(i);
 		}
-
 		if(grafoInput[i].tipo == 'E'){
-			
-			Arista a;
-			a.capacidad = 1;
-			a.flujo = 0;
-			a.nodo = N+1;
-			grafoInput[i].adyacentes.push_back(a);
+			grafoInput[iShadow].addBinaryAdyacente(iSumidero);
 		}
-
 	}
 
-	for(int i = 0; i < M; i++) {
-		int A, B;
-		cin >> A >> B;
-		Arista a;
-		a.nodo = B;
-		a.capacidad = 1;
-		a.flujo = 0;
+    for(int i = 1; i <= M; i++) {
+        int from; int to;
+        cin >> from >> to;
+        int toShadow = shadowNode(grafoInput, to);
+        int fromShadow = shadowNode(grafoInput, from);
 
-		grafoInput[A].adyacentes.push_back(a);
-		a.nodo = A;
-		grafoInput[B].adyacentes.push_back(a);
-	}
+        grafoInput[fromShadow].addBinaryAdyacente(to);
+        grafoInput[toShadow].addBinaryAdyacente(from);
 
-	vector<Nodo> caminoAumento = grafoInput;
+    }
 
-	for(int i=0; i< N+2; i++){
-		
-
-	} 
-
-
-	/*for(int i = 0; i < N+2; i++) { //para imprimir grafoInput
-		cout << "nodo: " << i << endl;
-		for(int j = 0; j < grafoInput[i].adyacentes.size(); j++) {
-			cout << "*: " << grafoInput[i].adyacentes[j].nodo << ", ";
-		}
-		cout << endl;
-	}*/
-
-
+	cout << EdmondKarps(grafoInput) << endl;
 
 
 	return 0;
