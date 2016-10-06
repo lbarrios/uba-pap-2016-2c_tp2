@@ -40,18 +40,13 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 
 	def dfs_ap(self,v):
 		self.visited[v] = True
-		self.time += 1
-		self.low_value[v] = self.time
-		self.discovery_time[v] = self.time
+		self.low_value[v] = self.discovery_time[v] = self.time = self.time+1
 		children = 0
 		for w in self.adjacency[v]:
-			if not self.visited[w]:
+			if not self.visited[w]: # forward edge
 				children += 1
 				self.parent[w] = v
 				self.dfs_ap(w)
-				# check if the subtree rooted with w has
-				# connection to one of the ancestors of v
-				self.low_value[v] = min(self.low_value[v],self.low_value[w])
 				# check if v is AP
 				if self.parent[v] == None:
 					# v is root, check if has two or more children
@@ -64,10 +59,13 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 					if self.low_value[w] >= self.discovery_time[v]:
 						self.ap[v] = True
 						debug(v,"es punto de articulacion")
-			# if node is visited, update low value of v...
-			elif w != self.parent[v]:
-				debug("Actualizando low_value para",v)
+				# check if the subtree rooted with w 
+				# has connection to one of the ancestors of v
 				self.low_value[v] = min(self.low_value[v], self.low_value[w])
+			# if node is visited, update low value of v...
+			elif self.parent[v] != w: # forward edge
+				debug("Actualizando low_value para",v)
+				self.low_value[v] = min(self.low_value[v], self.discovery_time[w])
 
 N, M = map(int,input().split())
 E = [ list(map(int,input().split())) for i in range(M) ]
