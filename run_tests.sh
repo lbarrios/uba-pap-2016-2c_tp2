@@ -9,6 +9,11 @@ else
 fi
 
 ejercicio=${PWD##*/}
+if [ -f ${ejercicio}.py ]; then
+	ejercicio_ejecutable="python3 -O ${ejercicio}.py"
+else
+	ejercicio_ejecutable=./${ejercicio}
+fi
 
 # Check if there is an output for every input, if not fail-exit
 inputs=inputs/*.txt
@@ -25,7 +30,7 @@ done
 for input_path in ${inputs}; do
 	input_filename=${input_path##*/}
 	echo -n "Comparando el resultado de './${ejercicio} < ${input_path}' contra 'outputs/${input_filename}'..."
-	diff=$(${DIFF_CMD} -y <(./${ejercicio} < ${input_path}) outputs/${input_filename})
+	diff=$(${DIFF_CMD} -y <(${ejercicio_ejecutable} < ${input_path}) outputs/${input_filename})
 	if [ $? -eq 0 ]; then
 		echo -e "\e[1m\e[32mOK!\e[39m\e[0m"
 	else

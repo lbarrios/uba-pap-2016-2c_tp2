@@ -2,7 +2,7 @@
 UNAME:=$(shell uname)
 
 ifeq ($(UNAME),FreeBSD)
-	CXX=g++6
+	CXX=g++48
 	MAKE=gmake
 endif
 
@@ -35,6 +35,10 @@ ifeq ($(CXX),g++-4.7)
 endif
 
 ifeq ($(CXX),g++-4.8)
+	C11_FLAG=c++0x
+	C14_FLAG=c++0x
+endif
+ifeq ($(CXX),g++48)
 	C11_FLAG=c++0x
 	C14_FLAG=c++0x
 endif
