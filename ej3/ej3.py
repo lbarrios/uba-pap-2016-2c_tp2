@@ -15,29 +15,29 @@ class UndirectedGraph:
 	def addEdge(self,v, w):
 		self.adjacency[v].append(w)
 
-class GraphWithDFS(UndirectedGraph):
+class UndirectedGraphWithDFS(UndirectedGraph):
 	"""A class representing a graph with DFS"""
 	def __init__(self, N, M, E):
-		super(GraphWithDFS,self).__init__(N,M,E)
+		super(UndirectedGraphWithDFS,self).__init__(N,M,E)
 		self.visited = [False for i in range(N)]
 
 	def dfs(self,v):
 		self.visited[v] = True
-		debug("\nentering ",v)
-		debug("adjacency: ",self.adjacency[v])
 		for w in self.adjacency[v]:
-			debug("checking",w)
 			if not self.visited[w]:
-				debug("node",w,"is not visited")
 				self.dfs(w)
-			else:
-				debug("node",w,"is visited")
-		debug("RETURNING",v)
-		return
+
+class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
+	"""A class representing a graph with Articulation Points"""
+	def __init__(self, N, M, E):
+		super(UndirectedGraphWithArticulationPoints,self).__init__(N,M,E)
+		self.discovery_time = [N+1 for i in range(N)]
+		self.low_value = [N+1 for i in range(N)]
+
 
 N, M = map(int,input().split())
 E = [ list(map(int,input().split())) for i in range(M) ]
-G = GraphWithDFS(N,M,E)
+G = UndirectedGraphWithArticulationPoints(N,M,E)
 print(G.N)
 print(G.M)
 print(G.adjacency)
