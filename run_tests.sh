@@ -21,11 +21,9 @@ for input_path in ${inputs}; do
 	fi
 done
 
-# Create tests-output folder, and run every output
-mkdir -p tests
+# Create run test for every input and compare with every output
 for input_path in ${inputs}; do
 	input_filename=${input_path##*/}
-	output_path=outputs/${input}
 	echo -n "Comparando el resultado de './${ejercicio} < ${input_path}' contra 'outputs/${input_filename}'..."
 	diff=$(${DIFF_CMD} -y <(./${ejercicio} < ${input_path}) outputs/${input_filename})
 	if [ $? -eq 0 ]; then
