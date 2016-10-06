@@ -33,7 +33,36 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 		super(UndirectedGraphWithArticulationPoints,self).__init__(N,M,E)
 		self.discovery_time = [N+1 for i in range(N)]
 		self.low_value = [N+1 for i in range(N)]
+		self.parent = [None for i in range(N)]
+		self.ap = [False for i in range(N)]
+		self.time = 0
 
+	def dfs_ap(self,v):
+		self.visited[v] = True
+		children = 0
+		self.time += 1
+		self.low_value[v] = self.discovery_time[v] = self.time
+		for w in self.adjacency[v]:
+			if not self.visited[w]:
+				children += 1
+				self.parent[w] = v
+				self.dfs_ap(w)
+				# check if the subtree rooted with w has
+				# connection to one of the ancestors of v
+				self.low_value[v] = min(self.low_value[v],self.low_value[w])
+				# check if v is AP
+				if self.parent[v] == None:
+					# v is root, check if has two or more children
+					if children > 1:
+						self.ap[v] = True
+				else:
+					# v is not root, check if low value of one of its child
+					# is more than discovery value of v
+					if self.low_value[w] >= self.discovery_time[v]:
+						self.ap[v] = True
+			# if node is visited, update low value of v...
+			elif w != self.parent[v]:
+				self.low_value[v] = min(self.low_value[v], self.low_value[w])
 
 N, M = map(int,input().split())
 E = [ list(map(int,input().split())) for i in range(M) ]
@@ -42,7 +71,8 @@ print(G.N)
 print(G.M)
 print(G.adjacency)
 
-G.dfs(1)
+G.dfs_ap(1)
+print(G.ap)
 
 Q = int(input())
 queries = [ input().split() for i in range(Q) ]
