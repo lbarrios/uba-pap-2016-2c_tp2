@@ -11,6 +11,7 @@ class UndirectedGraph:
 		self.adjacency = [list() for i in range(N)]
 		for e in E:
 			self.adjacency[e[0]-1].append(e[1]-1)
+			self.adjacency[e[1]-1].append(e[0]-1)
 
 	def addEdge(self,v, w):
 		self.adjacency[v].append(w)
@@ -31,17 +32,18 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 	"""A class representing a graph with Articulation Points"""
 	def __init__(self, N, M, E):
 		super(UndirectedGraphWithArticulationPoints,self).__init__(N,M,E)
-		self.discovery_time = [N+1 for i in range(N)]
-		self.low_value = [N+1 for i in range(N)]
+		self.discovery_time = [0 for i in range(N)]
+		self.low_value = [0 for i in range(N)]
 		self.parent = [None for i in range(N)]
 		self.ap = [False for i in range(N)]
 		self.time = 0
 
 	def dfs_ap(self,v):
 		self.visited[v] = True
-		children = 0
 		self.time += 1
-		self.low_value[v] = self.discovery_time[v] = self.time
+		self.low_value[v] = self.time
+		self.discovery_time[v] = self.time
+		children = 0
 		for w in self.adjacency[v]:
 			if not self.visited[w]:
 				children += 1
@@ -55,24 +57,30 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 					# v is root, check if has two or more children
 					if children > 1:
 						self.ap[v] = True
+						debug(v,"es punto de articulacion")
 				else:
 					# v is not root, check if low value of one of its child
 					# is more than discovery value of v
 					if self.low_value[w] >= self.discovery_time[v]:
 						self.ap[v] = True
+						debug(v,"es punto de articulacion")
 			# if node is visited, update low value of v...
 			elif w != self.parent[v]:
+				debug("Actualizando low_value para",v)
 				self.low_value[v] = min(self.low_value[v], self.low_value[w])
 
 N, M = map(int,input().split())
 E = [ list(map(int,input().split())) for i in range(M) ]
 G = UndirectedGraphWithArticulationPoints(N,M,E)
-print(G.N)
-print(G.M)
-print(G.adjacency)
+debug(G.N)
+debug(G.M)
+debug(G.adjacency)
 
-G.dfs_ap(1)
-print(G.ap)
+G.dfs_ap(0)
+print("discovery_time =", G.discovery_time)
+print("low_value =", G.low_value)
+print("parent =", G.parent)
+print("ap =", G.ap)
 
 Q = int(input())
 queries = [ input().split() for i in range(Q) ]
