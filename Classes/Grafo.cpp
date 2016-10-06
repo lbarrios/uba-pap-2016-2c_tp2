@@ -37,6 +37,14 @@ struct CaminoCrecimiento{
     int flujoASacar;
 };
 
+std::ostream &operator<<(std::ostream &os, Arista const &a);
+
+std::ostream &operator<<(std::ostream &os, vector<Arista> const &a);
+
+std::ostream &operator<<(std::ostream &os, Nodo const &a);
+
+std::ostream &operator<<(std::ostream &os, vector<Nodo> const &a);
+
 //////////
 ////////// FUNCIONES CREACION DE GRAFOS
 //////////
@@ -55,7 +63,6 @@ vector<Nodo> CreateGrafoFlujo(int inputSize){
 
 vector<Nodo> CreateGrafoFlujoWithShadowNodes(int inputSize){
     // Los shadow nodes son una forma facil de generar la copia de los nodos que piden muchos algoritmos.
-    //
     int grafoSize = (inputSize * 2)+2;
     vector<Nodo> GrafoInput(grafoSize);
     for(int i = inputSize + 1; i < grafoSize - 1; i++){
@@ -210,15 +217,15 @@ CaminoCrecimiento buscarCaminoCrecimiento(vector<Nodo> grafo){
 //////////
 
 int EdmondKarps(vector<Nodo> grafo){
-    //cout << grafo << endl;
+    cout << grafo << endl;
     CaminoCrecimiento curCamino = buscarCaminoCrecimiento(grafo);
-    //int p = 0;
-    //int limits = 4;
+    int p = 0;
+    int limits = 4;
     while(curCamino.nodos.size() > 0){
-        /*if(p<limits){
-           // cout << "CAMINOS:" << endl;
+        if(p<limits){
+            cout << "CAMINOS:" << endl;
             for(int m = 0; m < curCamino.nodos.size();m++){
-            //    cout << "[" << curCamino.nodos[m] << "]";
+                cout << "[" << curCamino.nodos[m] << "]";
             }
             cout << endl;
 
@@ -227,16 +234,16 @@ int EdmondKarps(vector<Nodo> grafo){
                 cout << "[" << curCamino.posicionEnPadre[m] << "]";
             }
             cout << endl;
-        }*/
+        }
         for(int i = 0; i < curCamino.nodos.size(); i++){
             grafo[curCamino.nodos[i]].aristas[curCamino.posicionEnPadre[i]].flujo += curCamino.flujoASacar;
         }
         curCamino = buscarCaminoCrecimiento(grafo);
-        /*if(p<limits) cout << grafo << endl;
+       if(p<limits) cout << grafo << endl;
 
-        p = p +1;*/
+        p = p +1;
     }
-   //  cout << grafo << endl;
+     cout << grafo << endl;
     int answer = 0;
     for(int i = 0; i < grafo.size(); i ++){
         Nodo n = grafo[i];

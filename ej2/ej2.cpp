@@ -68,6 +68,6 @@ int main() {
         }
     }
 
-    cout << A - EdmondKarps(grafoInput) << endl;
+    cout << (A - EdmondKarps(grafoInput) ) << endl;
 	return 0;
 }
