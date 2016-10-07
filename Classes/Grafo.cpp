@@ -17,6 +17,7 @@ struct Arista {
 	int nodoId;
 	int capacidad;
 	int flujo;
+	//Arista* aristaInvertida;
 };
 
 class Nodo{
@@ -33,7 +34,7 @@ public:
 
 struct CaminoCrecimiento{
     vector<int> nodos;
-    vector<int> posicionEnPadre;
+    vector<int> direccion;
     int flujoASacar;
 };
 
@@ -130,6 +131,21 @@ void Nodo::addInfiniteAdyacente(int nodoId){
 ////// FUNCIONES AUXILIARES
 //////
 
+int** MatrizDePosicionesDePadres(vector<Nodo> grafo){
+        int cant = grafo.size();
+        int** matriz = new int*[cant];
+        for(int x=0; x< cant; x++){
+            matriz[x] = new int[cant];
+            for(int x2=0; x2< cant; x2++) matriz[x][x2] = -1;
+        }
+
+        for(int x = 0; x < grafo.size(); x++){
+            for(int y = 0; y < grafo[x].aristas.size(); y++)matriz[x][grafo[x].aristas[y].nodoId] = y;
+        }
+
+        return matriz;
+}
+
 vector<Nodo> GrafoTranspuesto(vector<Nodo> grafo){
     vector<Nodo> transpuesto;
     vector<Arista> emptyArista;
@@ -140,7 +156,13 @@ vector<Nodo> GrafoTranspuesto(vector<Nodo> grafo){
 
     for(int x = 0; x < grafo.size();x++){
         vector<Arista> aristas = grafo[x].aristas;
-        for(int y = 0; y < aristas.size();y++) transpuesto[aristas[y].nodoId].addAdyacente(x);
+        for(int y = 0; y < aristas.size();y++){
+         int id = aristas[y].nodoId;
+         int last = transpuesto[id].aristas.size();
+         transpuesto[id].addAdyacente(x);
+         transpuesto[id].aristas[last].flujo = grafo[x].aristas[y].flujo;
+         transpuesto[id].aristas[last].capacidad = grafo[x].aristas[y].capacidad;
+        }
     }
 
     return transpuesto;
@@ -152,43 +174,63 @@ CaminoCrecimiento buscarCaminoCrecimiento(vector<Nodo> grafo){
 
     vector<int> flujos(grafo.size());
     vector<int> padre(grafo.size());
-    vector<int> lugarEnPadre(grafo.size());
+    vector<int> direccion(grafo.size());
 
     for(int x = 0; x < grafo.size(); x++){
             flujos[x] = -1;
             padre[x] = -1;
-            lugarEnPadre[x] = -1;
+            direccion[x] = 0;
     }
+    direccion[0] = 1;
+
+    vector<Nodo> residual = GrafoTranspuesto(grafo);
 
     vector<int> camino;
     camino.push_back(iFuente);
     int caminopos = 0;
-
-    while(camino.size() > caminopos){
+    bool found = false;
+    while(camino.size() > caminopos and !found){
         int curNodo = camino[caminopos];
         vector<Arista> aristas = grafo[curNodo].aristas;
-        for(int x = 0; x < aristas.size();x++){
-            int xNodo = aristas[x].nodoId;
-            int flujo = aristas[x].capacidad - aristas[x].flujo;
-            if(flujo > 0 and flujos[xNodo] == -1){
-                if(xNodo != iSumidero){
-                        lugarEnPadre[xNodo] = x;
-                        padre[xNodo] = curNodo;
-                        flujos[xNodo] = min(flujos[curNodo], flujo);
-                        if(curNodo == iFuente) flujos[xNodo] = flujo;
-                        camino.push_back(xNodo);
-                }else{
-                    int pSumidero = padre[iSumidero];
-                    int curFlujo = min(flujos[curNodo], flujo);
-                    if( pSumidero == -1 or flujos[pSumidero] > curFlujo){
-                        lugarEnPadre[iSumidero] = x;
+        vector<Arista> aristasInvertidas = residual[curNodo].aristas;
+
+        for(int x = 0; !found and x < aristas.size();x++){
+                int xNodo = aristas[x].nodoId;
+                int flujo = aristas[x].capacidad - aristas[x].flujo;
+                if(flujo > 0 and flujos[xNodo] == -1){
+                    if(xNodo != iSumidero){
+                            direccion[xNodo] = 1;
+                            padre[xNodo] = curNodo;
+                            flujos[xNodo] = min(flujos[curNodo], flujo);
+                            if(curNodo == iFuente) flujos[xNodo] = flujo;
+                            camino.push_back(xNodo);
+                    }else{
+                        //int pSumidero = padre[iSumidero];
+                        int curFlujo = min(flujos[curNodo], flujo);
+                        direccion[iSumidero] = 1;
                         padre[iSumidero] = curNodo;
                         flujos[iSumidero] = curFlujo;
+                        found = true;
+                    }
+                }
+        }
 
+        for(int x = 0; !found and x < aristasInvertidas.size();x++){
+            int xNodo = aristasInvertidas[x].nodoId;
+            int flujo = aristasInvertidas[x].flujo;
+            if(flujo > 0 and flujos[xNodo] == -1){
+                if(xNodo != iFuente){
+                      /*  lugarEnPadre[xNodo] = x;*/
+                        direccion[xNodo] = -1;
+                        //cout << "CURRENTNODE[" << xNodo << "]" << endl;
+                        padre[xNodo] = curNodo;
+                        flujos[xNodo] = min(flujos[curNodo], flujo);
+                        camino.push_back(xNodo);
+                        /*-*/
                     }
                 }
             }
-        }
+
         caminopos += 1;
     }
 
@@ -196,17 +238,21 @@ CaminoCrecimiento buscarCaminoCrecimiento(vector<Nodo> grafo){
     respuesta.flujoASacar = flujos[iSumidero];
 
     vector<int> caminoNodos;
-    vector<int> caminoNodosLugarEnPadre;
+    vector<int> caminoTargetNode;
+    vector<int> caminoDireccion;
 
     int currentNodo = padre[iSumidero];
-    caminoNodosLugarEnPadre.push_back(lugarEnPadre[iSumidero]);
+
+    caminoNodos.push_back(iSumidero);
+    caminoDireccion.push_back(direccion[iSumidero]);
     while(currentNodo > -1){
         caminoNodos.push_back(currentNodo);
-        caminoNodosLugarEnPadre.push_back(lugarEnPadre[currentNodo]);
+        caminoDireccion.push_back(direccion[currentNodo]);
         currentNodo = padre[currentNodo];
     }
     respuesta.nodos = caminoNodos;
-    respuesta.posicionEnPadre = caminoNodosLugarEnPadre;
+    //respuesta.targetNodos = caminoTargetNode;
+    respuesta.direccion = caminoDireccion;
 
 
     return respuesta;
@@ -217,40 +263,35 @@ CaminoCrecimiento buscarCaminoCrecimiento(vector<Nodo> grafo){
 //////////
 
 int EdmondKarps(vector<Nodo> grafo){
-    cout << grafo << endl;
+   // cout << grafo << endl;
     CaminoCrecimiento curCamino = buscarCaminoCrecimiento(grafo);
-    int p = 0;
-    int limits = 4;
-    while(curCamino.nodos.size() > 0){
-        if(p<limits){
-            cout << "CAMINOS:" << endl;
-            for(int m = 0; m < curCamino.nodos.size();m++){
-                cout << "[" << curCamino.nodos[m] << "]";
-            }
-            cout << endl;
+    int** posPadre = MatrizDePosicionesDePadres(grafo);
+    while(curCamino.nodos.size() > 1){
+       // cout<< "nodos" << endl;for(int i2 = 0; i2 < curCamino.nodos.size(); i2++){cout<< curCamino.nodos[i2] << "|";}cout<<endl;
+       // cout<< "..." << endl;for(int i2 = 0; i2 < curCamino.nodos.size()-1; i2++){cout<< curCamino.direccion[i2] << "|";}cout<<endl;
+        for(int i = 1; i < curCamino.nodos.size(); i++){
+            int posicionArista;
 
-            cout << "POSICION PADRES:" << endl;
-            for(int m = 0; m < curCamino.posicionEnPadre.size();m++){
-                cout << "[" << curCamino.posicionEnPadre[m] << "]";
+            if( curCamino.direccion[i-1] > 0){
+                posicionArista = posPadre[curCamino.nodos[i]][curCamino.nodos[i-1]];
+                grafo[curCamino.nodos[i]].aristas[posicionArista].flujo += curCamino.flujoASacar;
             }
-            cout << endl;
+
+            else if( curCamino.direccion[i-1] < 0){
+                posicionArista = posPadre[curCamino.nodos[i-1]][curCamino.nodos[i]];
+                grafo[curCamino.nodos[i-1]].aristas[posicionArista].flujo -= curCamino.flujoASacar;
+            }
         }
-        for(int i = 0; i < curCamino.nodos.size(); i++){
-            grafo[curCamino.nodos[i]].aristas[curCamino.posicionEnPadre[i]].flujo += curCamino.flujoASacar;
-        }
+
+        //cout << grafo << endl;
         curCamino = buscarCaminoCrecimiento(grafo);
-       if(p<limits) cout << grafo << endl;
-
-        p = p +1;
     }
-     cout << grafo << endl;
     int answer = 0;
     for(int i = 0; i < grafo.size(); i ++){
         Nodo n = grafo[i];
         for(int x = 0; x< n.aristas.size();x++){
             Arista a = n.aristas[x];
             if(a.nodoId == grafo.size()-1){
-               // cout << a.flujo<<endl;
                 answer += a.flujo;
             }
         }

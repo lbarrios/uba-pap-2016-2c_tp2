@@ -10,7 +10,6 @@ int main() {
 
 	vector<Nodo> grafoInput = CreateGrafoFlujoWithShadowNodes(N);
 
-
     int iFuente = fuente(grafoInput);
     int iSumidero = sumidero(grafoInput);
 
