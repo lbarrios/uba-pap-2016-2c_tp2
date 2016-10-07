@@ -34,17 +34,37 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 		super(UndirectedGraphWithArticulationPoints,self).__init__(N,M,E)
 		self.discovery_time = [0 for i in range(N)]
 		self.low_value = [0 for i in range(N)]
-		self.connected_component = [i for i in range(N)]
+		self.cycle_component = [i for i in range(N)]
 		self.parent = [None for i in range(N)]
 		self.ap = [False for i in range(N)]
 		self.time = 0
+
+	def dfs_A(self, v_current, w_end):
+		self.visited = [False for i in range(N)]
+		total_bridges = 0
+		def _dfs_A(v_current, w_end, bridges):
+			nonlocal total_bridges
+			debug("visiting",v_current+1,"/",w_end+1,"with bridges",bridges)
+			if v_current == w_end:
+				total_bridges = bridges
+			self.visited[v_current] = True
+			for w in self.adjacency[v_current]:
+				if not self.visited[w]:
+					if self.cycle_component[v_current] != self.cycle_component[w]:
+						debug(v_current+1,"and",w+1,"are in different cycles, adding one bridge",bridges+1)
+						_dfs_A(w, w_end, bridges+1)
+					else:
+						_dfs_A(w, w_end, bridges)
+		_dfs_A(v_current,w_end, 0)
+		print(total_bridges)
+
 
 	def dfs_ap(self,v):
 		self.visited[v] = True
 		self.low_value[v] = self.discovery_time[v] = self.time = self.time+1
 		children = 0
 		for w in self.adjacency[v]:
-			if not self.visited[w]: # forward edge
+			if not self.visited[w]: # tree edge
 				children += 1
 				self.parent[w] = v
 				self.dfs_ap(w)
@@ -60,15 +80,15 @@ class UndirectedGraphWithArticulationPoints(UndirectedGraphWithDFS):
 					if self.low_value[w] >= self.discovery_time[v]:
 						self.ap[v] = True
 						debug(v,"es punto de articulacion")
-				# check if the subtree rooted with w 
+				# check if the subtree rooted with w
 				# has connection to one of the ancestors of v
 				self.low_value[v] = min(self.low_value[v], self.low_value[w])
-				self.connected_component[v] = min(self.connected_component[v], self.connected_component[w])
+				self.cycle_component[v] = min(self.cycle_component[v], self.cycle_component[w])
 			# if node is visited, update low value of v...
-			elif self.parent[v] != w: # forward edge
+			elif self.parent[v] != w:
 				debug("Actualizando low_value para",v)
 				self.low_value[v] = min(self.low_value[v], self.discovery_time[w])
-				self.connected_component[v] = min(self.connected_component[v], self.connected_component[w])
+				self.cycle_component[v] = min(self.cycle_component[v], self.cycle_component[w])
 
 # input parsing
 # O(N+M)
@@ -79,12 +99,16 @@ G = UndirectedGraphWithArticulationPoints(N,M,E)
 # run dfs+ap on G
 # O(N+M)
 G.dfs_ap(0)
+# second run to find cycles components
+# O(N+M)
+G.visited = [False for i in range(N)]
+G.dfs_ap(0)
 
-print("discovery_time =", G.discovery_time)
-print("low_value =", G.low_value)
-print("connected_component =", G.connected_component)
-print("parent =", G.parent)
-print("ap =", G.ap)
+debug("discovery_time =", G.discovery_time)
+debug("low_value =", G.low_value)
+debug("cycle_component =", G.cycle_component)
+debug("parent =", G.parent)
+debug("ap =", G.ap)
 
 B = [0 for i in range(M)] # O(M)
 Caux = [0 for i in range(N)] # O(M)
@@ -92,35 +116,28 @@ C = [0 for i in range(N)] # O(M)
 
 # pre-calculation of B, O(M)
 for k,e in enumerate(E):
-	if G.connected_component[e[0]] != G.connected_component[e[1]]:
+	if G.cycle_component[e[0]] != G.cycle_component[e[1]]:
 		# if i remove e, then there is no way to go from e[0] to e[1]
 		B[k] = 1
 
 # pre-calculation of..
 # Caux, O(N)
-for v in G.connected_component:
+for v in G.cycle_component:
 	Caux[v] += 1
-# C, O(N), for every node, assign on C the size of the connected_component minus one
+# C, O(N), for every node, assign on C the size of the cycle_component minus one
 #
 for v in range(N):
-	C[v] = Caux[G.connected_component[v]] - 1
-
-# iterate over nodes, and see if there are APs, and look if
-# there are connected to any AP node. If so, the edge connecting
-# these nodes is an 
-for v in range(N):
-	if G.ap[v]:
-		pass
+	C[v] = Caux[G.cycle_component[v]] - 1
 
 Q = int(input())
 queries = [ input().split() for i in range(Q) ]
 
 for query in queries:
 	if query[0] == "A": # O(Qa)
-		e1 = int(query[1])-1
-		e2 = int(query[2])-1
-		for e in E: # O(M)
-			pass
+		v1 = int(query[1])-1
+		w1 = int(query[2])-1
+		G.dfs_A(v1,w1)
+		#for e in E: # O(M)
 	elif query[0] == "B": # O(Qb)
 		print(B[int(query[1])-1]) # O(1)
 	elif query[0] == "C": # O(Qc)
